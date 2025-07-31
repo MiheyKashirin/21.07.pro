@@ -26,7 +26,7 @@ def update_password(user_id, new_password):
     conn.close()
     print("Password updated")
 
-# Пример вызова функций
+
 if __name__ == "__main__":
     show_users()
     add_user("Test", "User", "pass123", "testuser@example.com")
