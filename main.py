@@ -1,16 +1,22 @@
-# This is a sample Python script.
+import sqlite3
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+# Подключаемся к базе данных, которая лежит в той же папке
+conn = sqlite3.connect("fi.db")
+cursor = conn.cursor()
 
+# Список таблиц
+cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+tables = cursor.fetchall()
+print("Список таблиц:", tables)
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+# Пример: показать все записи из таблицы user
+try:
+    cursor.execute("SELECT * FROM user;")
+    rows = cursor.fetchall()
+    print("Содержимое таблицы user:")
+    for row in rows:
+        print(row)
+except Exception as e:
+    print("Ошибка при запросе:", e)
 
-
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+conn.close()
