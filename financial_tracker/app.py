@@ -1,6 +1,23 @@
+import sqlite3
+
 from flask import Flask, request, render_template
 
+
 app = Flask(__name__)
+
+class Database:
+    def __init__(self, db_name):
+        self.db_name = db_name
+
+    def __enter__(self):
+        self.conn = sqlite3.connect(self.db_name)
+        self.cursor = self.conn.cursor()
+        return self.cursor
+
+    def __exit__ (self, exc_type, exc_val, exc_tb):
+        self.conn.commit()
+        self.db_name.close()
+
 
 @app.route("/user", methods=['GET','POST'])
 def user_handler():
@@ -17,7 +34,13 @@ def get_login():
     else:
         username = request.form['username']
         password = request.form['password']
-        return f'hello world POST {username} {password}'
+        with Database('financial_tracker.db') as cursor:
+            result = cursor.execute(f'SELECT * FROM user where email = {email} and password {password}')
+            data = result.fetchone()
+        if data:
+            return f'correct user pair'
+        else:
+            return f'wrong user pair'
 
 
 
@@ -26,9 +49,13 @@ def get_register():
     if request.method=='GET':
         return render_template('/register.html')
     else:
-        username = request.form['username']
+        name = request.form['name']
+        surname = request.form['surname']
         password = request.form['password']
-        return f'hello world POST {username} {password}'
+        email= request.form['email']
+        with Database('financial_tracker.db') as cursor:
+            cursor.execute(f"INSERT INTO users (name, surname,password, email) VALUES ({name},{surname},{password},{email})")
+        return f'user registered'
 
 
 @app.route('/category', methods=['GET', 'POST'])
