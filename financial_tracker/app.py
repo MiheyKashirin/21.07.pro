@@ -16,7 +16,8 @@ class Database:
 
     def __exit__ (self, exc_type, exc_val, exc_tb):
         self.conn.commit()
-        self.db_name.close()
+        self.conn.close()
+
 
 
 @app.route("/user", methods=['GET','POST'])
