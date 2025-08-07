@@ -1,7 +1,7 @@
-import email
 import sqlite3
 
-from flask import Flask, request,render_template
+from flask import Flask, request, render_template
+
 app = Flask(__name__)
 
 class Database:
@@ -32,10 +32,13 @@ def get_login():
     if request.method=='GET':
         return render_template('login.html')
     else:
-        username = request.form['username']
+        email = request.form['email']
         password = request.form['password']
         with Database('financial_tracker.db') as cursor:
-            result = cursor.execute(f'SELECT * FROM user where email = {email} and password {password}')
+            result = cursor.execute(
+                "SELECT * FROM users WHERE email = ? AND password = ?",
+                (email, password)
+            )
             data = result.fetchone()
         if data:
             return f'correct user pair'
@@ -47,14 +50,14 @@ def get_login():
 @app.route('/register', methods=['GET', 'POST'])
 def get_register():
     if request.method=='GET':
-        return render_template('/register.html')
+        return render_template('register.html')
     else:
         name = request.form['name']
         surname = request.form['surname']
         password = request.form['password']
         email= request.form['email']
         with Database('financial_tracker.db') as cursor:
-            cursor.execute(f"INSERT INTO users (name, surname,password, email) VALUES ({name},{surname},{password},{email})")
+            cursor.execute(f"INSERT INTO users (name, surname,password, email) VALUES ('{name}','{surname}','{password}','{email}')")
         return f'user registered'
 
 
@@ -114,7 +117,8 @@ def spend_2(spend_id):
         return  'hello world DELETE'
 
 
-if __name__== '__main__':
-    app.run()
+if __name__ == "__main__":
+    app.run(debug=True)
+
 
 
