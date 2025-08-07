@@ -1,7 +1,7 @@
 import sqlite3
 
 def show_users():
-    conn = sqlite3.connect(r"C:/Users/User/PycharmProjects/21.07/fi.db")
+    conn = sqlite3.connect(r"/financial_tracker/fi.db")
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM user;")
     users = cursor.fetchall()
@@ -10,7 +10,7 @@ def show_users():
     conn.close()
 
 def add_user(name, surname, password, email):
-    conn = sqlite3.connect(r"C:/Users/User/PycharmProjects/21.07/fi.db")
+    conn = sqlite3.connect(r"/financial_tracker\fi.db")
     cursor = conn.cursor()
     cursor.execute("INSERT INTO user (name, surname, password, email) VALUES (?, ?, ?, ?)",
                    (name, surname, password, email))
@@ -19,7 +19,7 @@ def add_user(name, surname, password, email):
     print("User added")
 
 def update_password(user_id, new_password):
-    conn = sqlite3.connect(r"C:/Users/User/PycharmProjects/21.07/fi.db")
+    conn = sqlite3.connect(r"/financial_tracker/fi.db")
     cursor = conn.cursor()
     cursor.execute("UPDATE user SET password = ? WHERE id = ?", (new_password, user_id))
     conn.commit()

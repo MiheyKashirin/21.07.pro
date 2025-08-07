@@ -2,7 +2,7 @@ import sqlite3
 
 def main():
 
-    conn = sqlite3.connect("C:/Users/User/PycharmProjects/21.07/fi.db")
+    conn = sqlite3.connect("/financial_tracker/fi.db")
     cursor = conn.cursor()
 
 
