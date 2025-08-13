@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Category List</title>
+</head>
+<body>
+<h1>Categories</h1>
+{% for one_cat in categories %}
+    <p>
+        <a href="/category/{{ one_cat.id }}">{{ one_cat.name }}</a>
+        <a href="/category/{{ one_cat.id }}/delete">Delete</a>
+    </p>
+{% endfor %}
+</body>
+</html>

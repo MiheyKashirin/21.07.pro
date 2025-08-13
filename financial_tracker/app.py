@@ -1,5 +1,4 @@
 import sqlite3
-
 from flask import Flask, request, render_template, session, redirect
 
 app = Flask(__name__)
@@ -14,6 +13,7 @@ class Database:
 
     def __enter__(self):
         self.conn = sqlite3.connect(self.db_name)
+        self.conn.row_factory = sqlite3.Row
         self.cursor = self.conn.cursor()
         return self.cursor
 
@@ -21,26 +21,40 @@ class Database:
         self.conn.commit()
         self.conn.close()
 
+class DBwrapper:
+    def insert(self, table, data):
+        with Database('financial_tracker.db') as cursor:
+            cursor.execute(
+                f"INSERT INTO {table}({','.join(data.keys())}) VALUES ({','.join(['?'] * len(data))})",
+                tuple(data.values())
+            )
+
+    def select(self, table, where=None):
+        with Database('financial_tracker.db') as cursor:
+            if where:
+                result_params = []
+                for key, value in where.items():
+                    if isinstance(value, list):
+                        result_params.append(f"{key} IN ({','.join(str(v) for v in value)})")
+                    else:
+                        if isinstance(value, str):
+                            result_params.append(f"{key} = '{value}'")
+                        else:
+                            result_params.append(f"{key} = {value}")
+                result_where = ' AND '.join(result_params)
+                cursor.execute(f"SELECT * FROM {table} WHERE {result_where}")
+            else:
+                cursor.execute(f"SELECT * FROM {table}")
+            return cursor.fetchall()
+
+
 @app.route('/dashboard')
 def dashboard():
     if 'users_id' not in session:
         return redirect('/login')
-    with Database('financial_tracker.db') as cursor:
-        cursor.execute(
-            'SELECT * FROM transactions WHERE owner =?',
-            (session['users_id'],)
-        )
-        transactions = cursor.fetchall()
-    return render_template('dashboard.html', transactions=transactions)
-
-
-
-@app.route("/user", methods=['GET', 'POST'])
-def user_handler():
-    if request.method == 'GET':
-        return "Hello World. GET"
-    else:
-        return 'Hello World POST'
+    db = DBwrapper()
+    res = db.select('transactions', {'owner': session['users_id']})
+    return render_template('dashboard.html', transactions=res)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -50,14 +64,10 @@ def get_login():
     else:
         email = request.form['email']
         password = request.form['password']
-        with Database('financial_tracker.db') as cursor:
-            result = cursor.execute(
-                "SELECT * FROM users WHERE email = ? AND password = ?",
-                (email, password)
-            )
-            data = result.fetchone()
+        db = DBwrapper()
+        data = db.select('users', {'email': email, 'password': password})
         if data:
-            session['users_id'] = data[0]  # сохраняем id пользователя
+            session['users_id'] = data[0]['id']
             return 'correct user pair'
         else:
             return 'wrong user pair'
@@ -72,110 +82,78 @@ def get_register():
         surname = request.form['surname']
         password = request.form['password']
         email = request.form['email']
-        with Database('financial_tracker.db') as cursor:
-            cursor.execute(
-                "INSERT INTO users (name, surname, password, email) VALUES (?, ?, ?, ?)",
-                (name, surname, password, email)
-            )
+        db = DBwrapper()
+        db.insert('users', {'name': name, 'surname': surname, 'password': password, 'email': email})
         return 'user registered'
 
 
 @app.route('/category', methods=['GET', 'POST'])
 def get_category():
-    if request.method == 'GET':
-        return 'hello world GET'
-    else:
-        return 'hello world POST'
+    if 'users_id' in session:
+        db = DBwrapper()
+        if request.method == 'GET':
+            res = db.select('category', {'owner': [session['users_id'], 1]})
+            return render_template('category_list.html', categories=res)
+        else:
+            category_name = request.form['category_name']
+            category_owner = session['users_id']
+            db.insert('category', {'name': category_name, 'owner': category_owner})
+            return redirect('/category')
 
 
-@app.route('/category/<category_id>', methods=['GET', 'PATCH', 'DELETE'])
+@app.route('/category/<category_id>', methods=['GET', 'POST'])
 def get_category_2(category_id):
-    if request.method == 'GET':
-        return f'this is category {category_id}'
-    elif request.method == 'PATCH':
-        return 'PATCH'
-    else:
-        return 'hello world DELETE'
+    if 'users_id' in session:
+        db = DBwrapper()
+        if request.method == 'GET':
+            res = db.select('transactions', {'category': category_id, 'owner': session['users_id']})
+            curr_category = db.select('category', {'id': category_id})[0]
+            return render_template('one_category.html', transactions=res, category=curr_category)
+        else:
+            return 'hello world edit category'
 
 
 @app.route('/income', methods=['GET', 'POST'])
 def income():
     if 'users_id' not in session:
         return redirect('/login')
+    db = DBwrapper()
     if request.method == 'GET':
-        with Database('financial_tracker.db') as cursor:
-            cursor.execute(
-                "SELECT * FROM transactions WHERE owner = ? AND type = ?",
-                (session['users_id'], INCOME)
-            )
-            res = cursor.fetchall()
-            return render_template('dashboard.html', transactions=res)
+        res = db.select('transactions', {'owner': session['users_id'], 'type': INCOME})
+        return render_template('dashboard.html', transactions=res)
     else:
-        transactions_description = request.form['description']
-        transactions_category = request.form['category']
-        transactions_date = request.form['date']
-        transactions_owner = session['users_id']  # берём из сессии
-        transactions_type = INCOME
-        transactions_amount = request.form['amount']
-
-        with Database('financial_tracker.db') as cursor:
-            cursor.execute(
-                "INSERT INTO transactions (description, category, date, owner, type, amount) VALUES (?, ?, ?, ?, ?, ?)",
-                    (transactions_description, transactions_category, transactions_date, transactions_owner, transactions_type, transactions_amount)
-            )
-            return redirect('/income')
-
-
-
-@app.route('/income/<income_id>', methods=['GET', 'PATCH', 'DELETE'])
-def income_2(income_id):
-    if request.method == 'GET':
-        return f'this is income {income_id}'
-    elif request.method == 'PATCH':
-        return 'PATCH'
-    else:
-        return 'hello world DELETE'
+        db.insert('transactions', {
+            'description': request.form['description'],
+            'category': request.form['category'],
+            'date': request.form['date'],
+            'owner': session['users_id'],
+            'type': INCOME,
+            'amount': request.form['amount']
+        })
+        return redirect('/income')
 
 
 @app.route('/spend', methods=['GET', 'POST'])
 def spend():
     if 'users_id' not in session:
-        return redirect('login')
+        return redirect('/login')
+    db = DBwrapper()
     if request.method == 'GET':
-        with Database('financial_tracker.db') as cursor:  # исправлено название файла
-            cursor.execute(
-                "SELECT * FROM transactions WHERE owner = ? AND type = ?",
-                (session['users_id'], SPEND)
-            )
-            res = cursor.fetchall()
-            return render_template('dashboard.html', transactions=res)
+        res = db.select('transactions', {'owner': session['users_id'], 'type': SPEND})
+        return render_template('dashboard.html', transactions=res)
     else:
-        transaction_description = request.form['description']
-        transaction_category = request.form['category']
-        transaction_date = request.form['date']
-        transaction_owner = session['users_id']  # берём из сессии
-        transaction_type = SPEND
-        transaction_amount = request.form['amount']
-
-        with Database('financial_tracker.db') as cursor:
-            cursor.execute(
-                "INSERT INTO transactions (description, category, date, owner, type, amount) VALUES (?, ?, ?, ?, ?, ?)",
-                (transaction_description, transaction_category, transaction_date, transaction_owner, transaction_type, transaction_amount)
-            )
+        db.insert('transactions', {
+            'description': request.form['description'],
+            'category': request.form['category'],
+            'date': request.form['date'],
+            'owner': session['users_id'],
+            'type': SPEND,
+            'amount': request.form['amount']
+        })
         return redirect('/spend')
-
-
-
-
-@app.route('/spend/<spend_id>', methods=['GET', 'PATCH', 'DELETE'])
-def spend_2(spend_id):
-    if request.method == 'GET':
-        return f'this is spend {spend_id}'
-    elif request.method == 'PATCH':
-        return 'PATCH'
-    else:
-        return 'hello world DELETE'
 
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+
