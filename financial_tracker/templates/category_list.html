@@ -2,15 +2,30 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Category List</title>
+    <title>Categories</title>
 </head>
 <body>
-<h1>Categories</h1>
-{% for one_cat in categories %}
-    <p>
-        <a href="/category/{{ one_cat.id }}">{{ one_cat.name }}</a>
-        <a href="/category/{{ one_cat.id }}/delete">Delete</a>
-    </p>
-{% endfor %}
+    <h1>Ваши категории</h1>
+
+    <!-- форма добавления -->
+    <form method="post" action="/category">
+        <input type="text" name="category_name" placeholder="Введите название категории" required>
+        <button type="submit">Добавить</button>
+    </form>
+
+    <hr>
+
+    <!-- список категорий -->
+    {% if categories %}
+        <ul>
+            {% for category in categories %}
+                <li>{{ category.name }}
+                    <a href="/delete/{{ category.id }}">Удалить</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>У вас пока нет категорий</p>
+    {% endif %}
 </body>
 </html>
