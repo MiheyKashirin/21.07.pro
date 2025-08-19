@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, REAL, Enum
-from dataBase import Base
+from financial_tracker.dataBase import Base
+
 
 class User(Base):
     __tablename__ = 'users'
@@ -8,6 +9,9 @@ class User(Base):
     surname = Column(String(50))
     password = Column(String(50))
     email = Column(String(120), unique=True)
+    birth_date = Column(DateTime)
+    country = Column(String(50), nullable=True)
+
 
 
     def __repr__(self):
