@@ -34,11 +34,12 @@ def get_login():
         email = request.form['email']
         password = request.form['password']
         init_db()
-        data = list(db_session.execute(select(models.User).filter_by(email=email,password=password)).scalars())
-        if data:
+        data = list(db_session.execute(select(models.Users).filter_by(email=email, password=password)).scalars())
+
+    if data:
             session['users_id'] = data[0].id
             return 'correct user pair'
-        return f"wrong user pair"
+    return f"wrong user pair"
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -51,7 +52,7 @@ def get_register(new_user=None):
         password = request.form['password']
         email = request.form['email']
         init_db()
-        next_user= models.User(name=name, surname=surname, password= password,email=email)
+        next_user= models.Users(name=name, surname=surname, password= password,email=email)
         db_session.add(next_user)
         db_session.commit()
         return 'user registered'

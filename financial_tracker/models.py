@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, REAL, Enum
 from financial_tracker.dataBase import Base
 
 
-class User(Base):
+class Users(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True)
     name = Column(String(50))
