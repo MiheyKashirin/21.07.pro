@@ -298,7 +298,7 @@ def edit_spend(spend_id):
         spend.category = int(request.form['category'])
         spend.datetime = datetime.strptime(request.form['datetime'], '%Y-%m-%dT%H:%M')
         db_session.commit()
-        return redirect('/spend')
+        return redirect('/income')
 
     categories = db_session.execute(
         select(models.Category).filter(
