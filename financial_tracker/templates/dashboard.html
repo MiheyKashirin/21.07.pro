@@ -2,11 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard</title>
+    <title>All Transactions</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-<h1>Welcome, {{ user_name }}</h1>
 
+<h1>All Transactions</h1>
+
+<!-- Форма фильтрации по дате -->
+<form method="get" action="/user">
+    <label>Start Date:</label>
+    <input type="datetime-local" name="date_from">
+    <label>End Date:</label>
+    <input type="datetime-local" name="date_to">
+    <button type="submit">Filter</button>
+</form>
+
+<!-- Общая сумма доходов и расходов -->
+<p><strong>Total Income:</strong> {{ aggregated_data.income }}</p>
+<p><strong>Total Spend:</strong> {{ aggregated_data.spend }}</p>
+
+<!-- Таблица транзакций -->
 <h2>Your transactions:</h2>
 {% if transactions %}
 <table border="1">
@@ -14,29 +30,71 @@
         <th>ID</th>
         <th>Description</th>
         <th>Category</th>
-        <th>Date</th>
         <th>Amount</th>
+        <th>Date</th>
+        <th>Type</th>
+        <th>Actions</th>
     </tr>
     {% for t in transactions %}
     <tr>
-        <td>{{ t[0] }}</td>
-        <td>{{ t[1] }}</td>
-        <td>{{ t[2] }}</td>
-        <td>{{ t[3] }}</td>
-        <td>{{ t[5] }}</td>
+        <td>{{ t.id }}</td>
+        <td>{{ t.description }}</td>
+        <td>{{ t.category_name }}</td>
+        <td>{{ t.amount }}</td>
+        <td>{{ t.datetime.strftime('%Y-%m-%d %H:%M') if t.datetime else '' }}</td>
+        <td>{{ t.type|capitalize }}</td>
+        <td>
+            <a href="/transaction/{{ t.id }}">View</a>
+            <form action="/transaction/{{ t.id }}/delete" method="post" style="display:inline;">
+                <button type="submit">Delete</button>
+            </form>
+        </td>
     </tr>
     {% endfor %}
 </table>
+
+<!-- График доходов и расходов -->
+<canvas id="financeChart" width="400" height="200"></canvas>
+<script>
+const ctx = document.getElementById('financeChart').getContext('2d');
+const financeChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: ['Income', 'Spend'],
+        datasets: [{
+            label: 'Amount',
+            data: [{{ aggregated_data.income }}, {{ aggregated_data.spend }}],
+            backgroundColor: [
+                'rgba(54, 162, 235, 0.6)',  // синий для дохода
+                'rgba(255, 99, 132, 0.6)'   // красный для расхода
+            ],
+            borderColor: [
+                'rgba(54, 162, 235, 1)',
+                'rgba(255, 99, 132, 1)'
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+</script>
+
 {% else %}
 <p>No transactions found.</p>
 {% endif %}
 
-<h2>Add new transaction:</h2>
-<form method="post">
-    <label>Description: <input type="text" name="description"></label><br>
-    <label>Category: <input type="text" name="category"></label><br>
-    <label>Date: <input type="date" name="date"></label><br>
-    <label>Amount: <input type="number" step="0.01" name="amount"></label><br>
-    <input type="submit" value="Add">
+<!-- Ссылки -->
+<br>
+<a href="/income">+ Add Income</a><br>
+<a href="/spend">+ Add Spend</a><br>
+<a href="/category">Manage Categories</a><br>
+<a href="/logout">Logout</a>
+
 </body>
 </html>

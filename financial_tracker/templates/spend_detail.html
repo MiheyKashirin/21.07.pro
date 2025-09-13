@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Детали расхода</title>
+</head>
+<body>
+    <h1>Детали расхода</h1>
+    <p><strong>Описание:</strong> {{ spend.description }}</p>
+    <p><strong>Категория:</strong> {{ spend.category_name }}</p>
+    <p><strong>Сумма:</strong> {{ spend.amount }}</p>
+    <p><strong>Дата и время:</strong> {{ spend.datetime }}</p>
+
+    <a href="{{ url_for('edit_spend', spend_id=spend.id) }}">Редактировать</a>
+    <form action="{{ url_for('delete_spend', spend_id=spend.id) }}" method="POST" style="display:inline;">
+        <button type="submit">Удалить</button>
+    </form>
+    <br>
+    <a href="{{ url_for('get_all_spend') }}">Назад ко всем расходам</a>
+</body>
+</html>

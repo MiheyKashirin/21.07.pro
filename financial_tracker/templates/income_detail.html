@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Детали дохода</title>
+</head>
+<body>
+    <h1>Детали дохода</h1>
+    <p><strong>Описание:</strong> {{ income.description }}</p>
+    <p><strong>Категория:</strong> {{ income.category_name }}</p>
+    <p><strong>Сумма:</strong> {{ income.amount }}</p>
+    <p><strong>Дата и время:</strong> {{ income.datetime }}</p>
+
+    <a href="{{ url_for('edit_income', income_id=income.id) }}">Редактировать</a>
+    <form action="{{ url_for('delete_income', income_id=income.id) }}" method="POST" style="display:inline;">
+        <button type="submit">Удалить</button>
+    </form>
+    <br>
+    <a href="{{ url_for('get_all_income') }}">Назад ко всем доходам</a>
+</body>
+</html>

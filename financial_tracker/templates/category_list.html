@@ -7,7 +7,7 @@
 <body>
     <h1>Ваши категории</h1>
 
-    <!-- форма добавления -->
+
     <form method="post" action="/category">
         <input type="text" name="category_name" placeholder="Введите название категории" required>
         <button type="submit">Добавить</button>
@@ -15,17 +15,19 @@
 
     <hr>
 
-    <!-- список категорий -->
+
     {% if categories %}
-        <ul>
-            {% for category in categories %}
-                <li>{{ category.name }}
-                    <a href="/delete/{{ category.id }}">Удалить</a>
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>У вас пока нет категорий</p>
-    {% endif %}
+    <ul>
+        {% for category in categories %}
+            <li>
+                <a href="/category/{{ category.id }}">{{ category.name }}</a>
+                | <a href="/delete/{{ category.id }}">Удалить</a>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>У вас пока нет категорий</p>
+{% endif %}
+
 </body>
 </html>
