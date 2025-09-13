@@ -44,10 +44,21 @@
         <td>{{ t.datetime.strftime('%Y-%m-%d %H:%M') if t.datetime else '' }}</td>
         <td>{{ t.type|capitalize }}</td>
         <td>
-            <a href="/transaction/{{ t.id }}">View</a>
-            <form action="/transaction/{{ t.id }}/delete" method="post" style="display:inline;">
-                <button type="submit">Delete</button>
-            </form>
+            {% if t.type == 'income' %}
+                <!-- Редактирование дохода -->
+                <a href="/income/{{ t.id }}/edit">Edit</a>
+                <!-- Удаление дохода -->
+                <form action="/income/{{ t.id }}/delete" method="post" style="display:inline;">
+                    <button type="submit">Delete</button>
+                </form>
+            {% else %}
+                <!-- Редактирование расхода -->
+                <a href="/spend/{{ t.id }}/edit">Edit</a>
+                <!-- Удаление расхода -->
+                <form action="/spend/{{ t.id }}/delete" method="post" style="display:inline;">
+                    <button type="submit">Delete</button>
+                </form>
+            {% endif %}
         </td>
     </tr>
     {% endfor %}
